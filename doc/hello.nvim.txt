@@ -1,0 +1,65 @@
+*hello.nvim.txt*        A hello-world scaffolding template for Neovim plugins
+
+==============================================================================
+Table of Contents                               *hello.nvim-table-of-contents*
+
+1. hello.nvim                                          |hello.nvim-hello.nvim|
+  - Features                                             |hello.nvim-features|
+  - Installation                                     |hello.nvim-installation|
+  - Configuration                                   |hello.nvim-configuration|
+  - Commands                                             |hello.nvim-commands|
+  - API                                                       |hello.nvim-api|
+
+==============================================================================
+1. hello.nvim                                          *hello.nvim-hello.nvim*
+
+A minimal plugin that inserts text at the cursor. Its real purpose is to be a
+scaffolding template: rename `hello` and replace the feature modules with your
+own.
+
+FEATURES                                                 *hello.nvim-features*
+
+- Insert a configurable greeting
+- Insert the current date with an optional strftime format
+- Insert a multi-line signature block
+
+INSTALLATION                                         *hello.nvim-installation*
+
+With lazy.nvim: >lua
+    {
+      "yourname/hello.nvim",
+      opts = {},
+    }
+<
+
+CONFIGURATION                                       *hello.nvim-configuration*
+
+Defaults: >lua
+    {
+      name = "World",
+      greeting = "Hello, %s!",
+      date_format = "%Y-%m-%d",
+      signature = {
+        "--",
+        "Sent from hello.nvim",
+      },
+      debug = false,
+    }
+<
+
+COMMANDS                                                 *hello.nvim-commands*
+
+                                                                      *:Hello*
+- `:Hello` or `:Hello greet`  insert the greeting
+- `:Hello date [format]`      insert the date, e.g. `:Hello date %H:%M`
+- `:Hello sign`               insert the signature block
+
+API                                                           *hello.nvim-api*
+
+>lua
+    require("hello").greet()
+    require("hello").date()
+    require("hello").sign()
+<
+
+vim:tw=78:ts=8:noet:ft=help:norl:

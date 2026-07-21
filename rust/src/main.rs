@@ -1,4 +1,4 @@
-//! md-fmt: the formatting engine behind mdfmt.nvim.
+//! md-fmt: the formatting engine behind md-fmt-rs.nvim.
 //!
 //! Reads a Markdown or MDX document on stdin and writes the formatted document
 //! on stdout. On failure it writes a message to stderr and produces nothing on

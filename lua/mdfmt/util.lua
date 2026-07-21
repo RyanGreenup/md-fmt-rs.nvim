@@ -5,7 +5,7 @@ local M = {}
 function M.notify(msg, opts)
   opts = opts or {}
   msg = type(msg) == "table" and table.concat(msg, "\n") or msg
-  vim.notify(msg --[[@as string]], opts.level or vim.log.levels.INFO, { title = "mdfmt.nvim" })
+  vim.notify(msg --[[@as string]], opts.level or vim.log.levels.INFO, { title = "md-fmt-rs.nvim" })
 end
 
 ---@param msg string|string[]

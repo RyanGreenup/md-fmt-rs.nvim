@@ -1,4 +1,4 @@
-# mdfmt.nvim
+# md-fmt-rs.nvim
 
 A Markdown and MDX formatter for Neovim, backed by
 [comrak](https://github.com/kivikakk/comrak).
@@ -8,12 +8,12 @@ A Markdown and MDX formatter for Neovim, backed by
 1. [What this project does](#what-this-project-does)
 2. [Who this project is for](#who-this-project-is-for)
 3. [Dependencies](#dependencies)
-4. [Install mdfmt.nvim](#install-mdfmtnvim)
-5. [Configure mdfmt.nvim](#configure-mdfmtnvim)
-6. [Run mdfmt.nvim](#run-mdfmtnvim)
+4. [Install md-fmt-rs.nvim](#install-mdfmtnvim)
+5. [Configure md-fmt-rs.nvim](#configure-mdfmtnvim)
+6. [Run md-fmt-rs.nvim](#run-mdfmtnvim)
 7. [How MDX is handled](#how-mdx-is-handled)
 8. [What happens to your cursor](#what-happens-to-your-cursor)
-9. [Troubleshoot mdfmt.nvim](#troubleshoot-mdfmtnvim)
+9. [Troubleshoot md-fmt-rs.nvim](#troubleshoot-mdfmtnvim)
 10. [Contributing](#contributing)
 11. [Additional documentation](#additional-documentation)
 12. [How to get help](#how-to-get-help)
@@ -21,7 +21,7 @@ A Markdown and MDX formatter for Neovim, backed by
 
 ## What this project does
 
-With mdfmt.nvim you can reflow a Markdown or MDX buffer to a fixed width,
+With md-fmt-rs.nvim you can reflow a Markdown or MDX buffer to a fixed width,
 normalize its lists, tables, and code fences, and leave its JSX untouched. Run
 `:MdFmt`, or set `format_on_save` and forget the command exists.
 
@@ -29,7 +29,7 @@ Two things separate it from wiring Prettier or `mdformat` into a general
 formatter plugin:
 
 * **MDX survives.** Prettier reformats the Markdown inside your components;
-  mdformat refuses MDX outright. mdfmt.nvim locates every MDX construct with
+  mdformat refuses MDX outright. md-fmt-rs.nvim locates every MDX construct with
   [markdown-rs](https://github.com/wooorm/markdown-rs), masks it, formats
   around it, and pastes the original bytes back. Your `<Callout>` interiors come
   back byte for byte.
@@ -53,7 +53,7 @@ less to gain here.
 
 ## Dependencies
 
-Before using mdfmt.nvim, you need:
+Before using md-fmt-rs.nvim, you need:
 
 * **Neovim 0.11 or later.** The plugin calls `vim.system()` for the subprocess
   and `vim.text.diff()` for the minimal-diff apply, falling back to `vim.diff()`
@@ -66,13 +66,13 @@ Before using mdfmt.nvim, you need:
   [lazy.nvim](https://github.com/folke/lazy.nvim). The instructions below use
   lazy.nvim, but nothing in the plugin depends on it.
 
-## Install mdfmt.nvim
+## Install md-fmt-rs.nvim
 
 1. Add the plugin to your lazy.nvim spec:
 
     ```lua
     {
-      "yourname/mdfmt.nvim",
+      "ryangreenup/md-fmt-rs.nvim",
       build = "cargo build --release --manifest-path rust/Cargo.toml",
       opts = {},
     }
@@ -93,10 +93,10 @@ with the clone on the runtimepath:
 
 ```sh
 make build
-nvim --clean -c 'set rtp+=/path/to/mdfmt.nvim' -c 'lua require("mdfmt").setup()' README.md
+nvim --clean -c 'set rtp+=/path/to/md-fmt-rs.nvim' -c 'lua require("mdfmt").setup()' README.md
 ```
 
-## Configure mdfmt.nvim
+## Configure md-fmt-rs.nvim
 
 Pass a table to `setup()`. Anything you omit keeps its default:
 
@@ -128,7 +128,7 @@ Two settings deserve a note:
 * **`bin`** opts out of the build machinery entirely. That binary is yours: the
   plugin never rebuilds it and never calls it stale.
 
-## Run mdfmt.nvim
+## Run md-fmt-rs.nvim
 
 | Command | Lua | Result |
 | --- | --- | --- |
@@ -194,7 +194,7 @@ replacement.
 If you type while the binary is running, the result is discarded rather than
 applied over your edit.
 
-## Troubleshoot mdfmt.nvim
+## Troubleshoot md-fmt-rs.nvim
 
 | Issue | Solution |
 | --- | --- |
@@ -228,7 +228,7 @@ buffer and cursor changes belong in the Lua specs.
 ## Additional documentation
 
 * [`doc/mdfmt.txt`](doc/mdfmt.txt) is the in-editor help file. Read it with
-  `:help mdfmt.nvim` once your plugin manager has generated the tags.
+  `:help md-fmt-rs.nvim` once your plugin manager has generated the tags.
 * [comrak](https://github.com/kivikakk/comrak) does the CommonMark formatting.
   Its options are what `width`, `frontmatter`, and the enabled extensions
   (tables, strikethrough, task lists, alerts, autolinks, footnotes) map onto.

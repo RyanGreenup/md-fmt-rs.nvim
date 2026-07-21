@@ -2,7 +2,7 @@
 name = "md-fmt"
 version = "0.1.0"
 edition = "2024"
-description = "Formatting engine for mdfmt.nvim: comrak for Markdown, markdown-rs for locating MDX"
+description = "Formatting engine for md-fmt-rs.nvim: comrak for Markdown, markdown-rs for locating MDX"
 publish = false
 
 # The plugin compiles this on the user's machine the first time they format a

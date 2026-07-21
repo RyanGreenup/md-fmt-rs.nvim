@@ -40,7 +40,7 @@ function M.setup(opts)
     complete = function(...)
       return require("mdfmt.cmd").complete(...)
     end,
-    desc = "mdfmt.nvim",
+    desc = "md-fmt-rs.nvim",
   })
 
   local group = vim.api.nvim_create_augroup("mdfmt", { clear = true })
@@ -50,7 +50,7 @@ function M.setup(opts)
       callback = function(event)
         require("mdfmt.format").format({ buf = event.buf, sync = true })
       end,
-      desc = "mdfmt.nvim: format before writing",
+      desc = "md-fmt-rs.nvim: format before writing",
     })
   end
 

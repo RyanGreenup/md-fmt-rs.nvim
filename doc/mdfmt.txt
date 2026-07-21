@@ -1,20 +1,20 @@
 *mdfmt.txt*                     A comrak-backed Markdown and MDX formatter
 
 ==============================================================================
-Table of Contents                                     *mdfmt.nvim-table-of-contents*
+Table of Contents                                     *md-fmt-rs.nvim-table-of-contents*
 
-1. mdfmt.nvim                                                         |mdfmt.nvim|
-  - Requirements                                        |mdfmt.nvim-requirements|
-  - Installation                                        |mdfmt.nvim-installation|
-  - Configuration                                      |mdfmt.nvim-configuration|
-  - Commands                                                |mdfmt.nvim-commands|
-  - API                                                          |mdfmt.nvim-api|
-  - How MDX is handled                                            |mdfmt.nvim-mdx|
-  - Cursor and marks                                           |mdfmt.nvim-cursor|
-  - Troubleshooting                                   |mdfmt.nvim-troubleshooting|
+1. md-fmt-rs.nvim                                                         |md-fmt-rs.nvim|
+  - Requirements                                        |md-fmt-rs.nvim-requirements|
+  - Installation                                        |md-fmt-rs.nvim-installation|
+  - Configuration                                      |md-fmt-rs.nvim-configuration|
+  - Commands                                                |md-fmt-rs.nvim-commands|
+  - API                                                          |md-fmt-rs.nvim-api|
+  - How MDX is handled                                            |md-fmt-rs.nvim-mdx|
+  - Cursor and marks                                           |md-fmt-rs.nvim-cursor|
+  - Troubleshooting                                   |md-fmt-rs.nvim-troubleshooting|
 
 ==============================================================================
-1. mdfmt.nvim                                                         *mdfmt.nvim*
+1. md-fmt-rs.nvim                                                         *md-fmt-rs.nvim*
 
 Formats the current buffer when it is Markdown or MDX, using comrak. MDX
 constructs are located with markdown-rs and passed through untouched.
@@ -23,19 +23,19 @@ The formatter is a Rust binary that lives in this plugin's own `rust/`
 directory. The plugin compiles it and keeps it up to date; you supply `cargo`.
 
 
-REQUIREMENTS                                              *mdfmt.nvim-requirements*
+REQUIREMENTS                                              *md-fmt-rs.nvim-requirements*
 
 - Neovim 0.11 or later, for `vim.system()` and `vim.text.diff()`.
 - A Rust toolchain on `$PATH`. Nothing else: the crate depends on two
   libraries and builds in a few seconds.
 
 
-INSTALLATION                                              *mdfmt.nvim-installation*
+INSTALLATION                                              *md-fmt-rs.nvim-installation*
 
 With lazy.nvim: >lua
 
     {
-      "yourname/mdfmt.nvim",
+      "ryangreenup/md-fmt-rs.nvim",
       build = "cargo build --release --manifest-path rust/Cargo.toml",
       opts = {},
     }
@@ -46,7 +46,7 @@ binary the first time you format a buffer anyway, and recompiles it after an
 update that changes the Rust source.
 
 
-CONFIGURATION                                            *mdfmt.nvim-configuration*
+CONFIGURATION                                            *md-fmt-rs.nvim-configuration*
 
 Pass a table to `setup()`. Anything omitted keeps its default: >lua
 
@@ -74,7 +74,7 @@ Setting `bin` opts out of the build machinery entirely: that binary is yours,
 so the plugin never rebuilds it and never calls it stale.
 
 
-COMMANDS                                                      *mdfmt.nvim-commands*
+COMMANDS                                                      *md-fmt-rs.nvim-commands*
 
                                                                         *:MdFmt*
 
@@ -85,7 +85,7 @@ COMMANDS                                                      *mdfmt.nvim-comman
 Press <Tab> after `:MdFmt ` to complete the subcommand names.
 
 
-API                                                                *mdfmt.nvim-api*
+API                                                                *md-fmt-rs.nvim-api*
 
                                                             *mdfmt.format()*
 `require("mdfmt").format({opts})`
@@ -113,7 +113,7 @@ Neovim ships no filetype rule for `.mdx` and many people edit it in a buffer
 that calls itself `markdown`.
 
 
-HOW MDX IS HANDLED                                                 *mdfmt.nvim-mdx*
+HOW MDX IS HANDLED                                                 *md-fmt-rs.nvim-mdx*
 
 comrak does not understand MDX and teaching it would mean forking a CommonMark
 parser, so markdown-rs is used for one thing: reporting the byte spans of the
@@ -130,7 +130,7 @@ Invalid MDX is an error, not a best effort. If `:MdFmt` reports a parse
 failure, the buffer is left exactly as it was.
 
 
-CURSOR AND MARKS                                                *mdfmt.nvim-cursor*
+CURSOR AND MARKS                                                *md-fmt-rs.nvim-cursor*
 
 The formatted text goes in as a minimal diff: only the lines that actually
 changed are rewritten. Marks, folds, and extmarks elsewhere in the buffer
@@ -144,7 +144,7 @@ the word. When the word is gone the cursor falls back to the equivalent
 position in the replacement.
 
 
-TROUBLESHOOTING                                        *mdfmt.nvim-troubleshooting*
+TROUBLESHOOTING                                        *md-fmt-rs.nvim-troubleshooting*
 
 `:MdFmt` reports `E492: Not an editor command`
     `setup()` never ran, and that call registers the command. Call

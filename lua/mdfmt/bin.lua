@@ -93,7 +93,7 @@ function M.build(cb)
   if vim.fn.executable(Config.cargo) == 0 then
     Util.error({
       ("`%s` is not executable."):format(Config.cargo),
-      "mdfmt.nvim compiles its own formatter and needs a Rust toolchain.",
+      "md-fmt-rs.nvim compiles its own formatter and needs a Rust toolchain.",
     })
     return M.finish(false)
   end

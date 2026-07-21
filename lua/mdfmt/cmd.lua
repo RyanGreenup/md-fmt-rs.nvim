@@ -1,23 +1,23 @@
-local Util = require("hello.util")
+local Util = require("mdfmt.util")
 
 local M = {}
 
 ---@type table<string, fun(args: string[])>
 M.commands = {
-  greet = function()
-    require("hello.greeting").insert()
+  format = function()
+    require("mdfmt.format").format()
   end,
-  date = function(args)
-    require("hello.date").insert(args[1])
+  build = function()
+    require("mdfmt.bin").build()
   end,
-  sign = function()
-    require("hello.signature").insert()
+  status = function()
+    Util.notify(require("mdfmt.bin").status())
   end,
 }
 
 function M.execute(input)
   local prefix, args = M.parse(input.args)
-  prefix = prefix and prefix ~= "" and prefix or "greet"
+  prefix = prefix and prefix ~= "" and prefix or "format"
   if not M.commands[prefix or ""] then
     return Util.error("Invalid command: " .. prefix)
   end
@@ -39,7 +39,7 @@ end
 ---@return string, string[]
 function M.parse(args)
   local parts = vim.split(vim.trim(args), "%s+")
-  if parts[1]:find("Hello") then
+  if parts[1]:find("MdFmt") then
     table.remove(parts, 1)
   end
   if args:sub(-1) == " " then

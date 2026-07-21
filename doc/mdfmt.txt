@@ -1,0 +1,169 @@
+*mdfmt.txt*                     A comrak-backed Markdown and MDX formatter
+
+==============================================================================
+Table of Contents                                     *mdfmt.nvim-table-of-contents*
+
+1. mdfmt.nvim                                                         |mdfmt.nvim|
+  - Requirements                                        |mdfmt.nvim-requirements|
+  - Installation                                        |mdfmt.nvim-installation|
+  - Configuration                                      |mdfmt.nvim-configuration|
+  - Commands                                                |mdfmt.nvim-commands|
+  - API                                                          |mdfmt.nvim-api|
+  - How MDX is handled                                            |mdfmt.nvim-mdx|
+  - Cursor and marks                                           |mdfmt.nvim-cursor|
+  - Troubleshooting                                   |mdfmt.nvim-troubleshooting|
+
+==============================================================================
+1. mdfmt.nvim                                                         *mdfmt.nvim*
+
+Formats the current buffer when it is Markdown or MDX, using comrak. MDX
+constructs are located with markdown-rs and passed through untouched.
+
+The formatter is a Rust binary that lives in this plugin's own `rust/`
+directory. The plugin compiles it and keeps it up to date; you supply `cargo`.
+
+
+REQUIREMENTS                                              *mdfmt.nvim-requirements*
+
+- Neovim 0.11 or later, for `vim.system()` and `vim.text.diff()`.
+- A Rust toolchain on `$PATH`. Nothing else: the crate depends on two
+  libraries and builds in a few seconds.
+
+
+INSTALLATION                                              *mdfmt.nvim-installation*
+
+With lazy.nvim: >lua
+
+    {
+      "yourname/mdfmt.nvim",
+      build = "cargo build --release --manifest-path rust/Cargo.toml",
+      opts = {},
+    }
+<
+
+The `build` key is a courtesy: with `auto_build` on, the plugin compiles the
+binary the first time you format a buffer anyway, and recompiles it after an
+update that changes the Rust source.
+
+
+CONFIGURATION                                            *mdfmt.nvim-configuration*
+
+Pass a table to `setup()`. Anything omitted keeps its default: >lua
+
+    require("mdfmt").setup({
+      -- Filetypes :MdFmt will touch.
+      filetypes = { "markdown", "markdown.mdx", "mdx" },
+      -- Column to wrap prose at. 0 leaves line breaks alone.
+      width = 80,
+      -- Frontmatter fence, or false to treat a leading --- as a rule.
+      frontmatter = "---",
+      -- Format on :w. Blocks the write while the binary runs.
+      format_on_save = false,
+      -- Path to a prebuilt md-fmt, if you would rather manage it yourself.
+      bin = nil,
+      -- Build the binary when it is missing or older than the crate source.
+      auto_build = true,
+      cargo = "cargo",
+      -- Milliseconds to wait for a synchronous format.
+      timeout = 5000,
+      debug = false,
+    })
+<
+
+Setting `bin` opts out of the build machinery entirely: that binary is yours,
+so the plugin never rebuilds it and never calls it stale.
+
+
+COMMANDS                                                      *mdfmt.nvim-commands*
+
+                                                                        *:MdFmt*
+
+`:MdFmt` or `:MdFmt format`  Format the current buffer.
+`:MdFmt build`               Compile the binary, whether or not it looks stale.
+`:MdFmt status`              Report the binary's path, state, and version.
+
+Press <Tab> after `:MdFmt ` to complete the subcommand names.
+
+
+API                                                                *mdfmt.nvim-api*
+
+                                                            *mdfmt.format()*
+`require("mdfmt").format({opts})`
+    Format a buffer. `opts.buf` defaults to the current buffer, `opts.sync`
+    blocks until the binary returns instead of applying the result from a
+    callback.
+
+                                                             *mdfmt.build()*
+`require("mdfmt").build({cb})`
+    Compile the binary. `cb` receives a boolean.
+
+                                                            *mdfmt.status()*
+`require("mdfmt").status()`
+    A list of lines describing the binary.
+
+To bind formatting to a key: >lua
+
+    vim.keymap.set("n", "<leader>mf", function()
+      require("mdfmt").format()
+    end, { desc = "Format Markdown" })
+<
+
+MDX is detected from the `.mdx` file extension before the filetype, because
+Neovim ships no filetype rule for `.mdx` and many people edit it in a buffer
+that calls itself `markdown`.
+
+
+HOW MDX IS HANDLED                                                 *mdfmt.nvim-mdx*
+
+comrak does not understand MDX and teaching it would mean forking a CommonMark
+parser, so markdown-rs is used for one thing: reporting the byte spans of the
+MDX constructs. Those spans are replaced with placeholders that comrak carries
+through untouched, comrak formats the Markdown around them, and the original
+bytes are pasted back.
+
+The consequence worth knowing: MDX interiors are frozen. Markdown inside
+`<Callout>...</Callout>` keeps whatever you wrote, because the interior of a
+JSX element is the component's business, and reformatting it can change what
+the component receives.
+
+Invalid MDX is an error, not a best effort. If `:MdFmt` reports a parse
+failure, the buffer is left exactly as it was.
+
+
+CURSOR AND MARKS                                                *mdfmt.nvim-cursor*
+
+The formatted text goes in as a minimal diff: only the lines that actually
+changed are rewritten. Marks, folds, and extmarks elsewhere in the buffer
+survive, and the undo history stays granular instead of collapsing into one
+opaque step.
+
+When the cursor's own line is rewritten, which prose rewrapping does a lot of,
+the cursor is carried by the word it was sitting on: that word is found again
+in the replacement text, and the cursor follows it, keeping its offset within
+the word. When the word is gone the cursor falls back to the equivalent
+position in the replacement.
+
+
+TROUBLESHOOTING                                        *mdfmt.nvim-troubleshooting*
+
+`:MdFmt` reports `E492: Not an editor command`
+    `setup()` never ran, and that call registers the command. Call
+    `require("mdfmt").setup()`, or give lazy.nvim an `opts` table.
+
+`cargo is not executable`
+    The plugin compiles its own formatter. Install Rust, or point `bin` at a
+    binary you built elsewhere.
+
+`could not parse MDX`
+    The buffer is not valid MDX. Note that HTML comments are not valid MDX
+    outside a code block; use `{/* ... */}`.
+
+Formatting does nothing
+    Run `:MdFmt status`. If `exists` is false the build failed; run
+    `:MdFmt build` and read the cargo output.
+
+Lines are still longer than `width`
+    Tables, link destinations, and MDX blobs have no break points in them.
+    comrak wraps at spaces only, so anything without one overflows.
+
+vim:tw=78:ts=8:noet:ft=help:norl:

@@ -1,0 +1,14 @@
+[package]
+name = "md-fmt"
+version = "0.1.0"
+edition = "2024"
+description = "Formatting engine for mdfmt.nvim: comrak for Markdown, markdown-rs for locating MDX"
+publish = false
+
+# The plugin compiles this on the user's machine the first time they format a
+# buffer, and they watch it happen. Keep the dependency list at two crates:
+# comrak's default features pull in syntect, clap, and an emoji table, none of
+# which a formatter needs.
+[dependencies]
+comrak = { version = "0.54.0", default-features = false }
+markdown = "1.0.0"

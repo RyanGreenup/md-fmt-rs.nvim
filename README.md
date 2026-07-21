@@ -1,18 +1,19 @@
-# hello.nvim
+# mdfmt.nvim
 
-A working Neovim plugin you can rename and gut to start your own.
+A Markdown and MDX formatter for Neovim, backed by
+[comrak](https://github.com/kivikakk/comrak).
 
 ## Table of contents
 
 1. [What this project does](#what-this-project-does)
 2. [Who this project is for](#who-this-project-is-for)
 3. [Dependencies](#dependencies)
-4. [Install hello.nvim](#install-hellonvim)
-5. [Configure hello.nvim](#configure-hellonvim)
-6. [Run hello.nvim](#run-hellonvim)
-7. [How the code is organized](#how-the-code-is-organized)
-8. [Turn this template into your own plugin](#turn-this-template-into-your-own-plugin)
-9. [Troubleshoot hello.nvim](#troubleshoot-hellonvim)
+4. [Install mdfmt.nvim](#install-mdfmtnvim)
+5. [Configure mdfmt.nvim](#configure-mdfmtnvim)
+6. [Run mdfmt.nvim](#run-mdfmtnvim)
+7. [How MDX is handled](#how-mdx-is-handled)
+8. [What happens to your cursor](#what-happens-to-your-cursor)
+9. [Troubleshoot mdfmt.nvim](#troubleshoot-mdfmtnvim)
 10. [Contributing](#contributing)
 11. [Additional documentation](#additional-documentation)
 12. [How to get help](#how-to-get-help)
@@ -20,235 +21,236 @@ A working Neovim plugin you can rename and gut to start your own.
 
 ## What this project does
 
-hello.nvim inserts a greeting, a timestamp, or a signature block at the cursor.
-Those three features are deliberately trivial; the scaffolding around them is
-the point: a config module that merges user options over defaults, a single user
-command that dispatches to subcommands and completes them, a shared utility
-module, and a help file.
+With mdfmt.nvim you can reflow a Markdown or MDX buffer to a fixed width,
+normalize its lists, tables, and code fences, and leave its JSX untouched. Run
+`:MdFmt`, or set `format_on_save` and forget the command exists.
 
-Most plugin templates give you an empty `lua/` directory and a license. This one
-gives you three features that already work end to end, so you can delete one,
-copy its shape, and know your replacement will load. The layout follows
-[lazydev.nvim](https://github.com/folke/lazydev.nvim), a small production plugin
-by folke, so the habits you pick up here match plugins people actually read.
+Two things separate it from wiring Prettier or `mdformat` into a general
+formatter plugin:
+
+* **MDX survives.** Prettier reformats the Markdown inside your components;
+  mdformat refuses MDX outright. mdfmt.nvim locates every MDX construct with
+  [markdown-rs](https://github.com/wooorm/markdown-rs), masks it, formats
+  around it, and pastes the original bytes back. Your `<Callout>` interiors come
+  back byte for byte.
+* **Your cursor stays put.** The result goes in as a minimal diff, and when
+  rewrapping rewrites the line you are sitting on, the cursor follows the word
+  it was on rather than the column number it was at. Marks, folds, and undo
+  granularity survive.
+
+The formatter itself is a small Rust binary in this repository's `rust/`
+directory. The plugin compiles it for you and keeps it current; you supply
+`cargo`.
 
 ## Who this project is for
 
-This project is for Neovim users who write Lua and want to publish their first
-plugin without deciding, from scratch, where the config lives or how to register
-commands.
+This project is for Neovim users who write Markdown or MDX and want formatting
+that behaves like a code formatter: fast, deterministic, and unwilling to
+rewrite the parts it does not understand.
+
+If you write no MDX and already run Prettier for everything else, you have
+less to gain here.
 
 ## Dependencies
 
-Before using hello.nvim, you need:
+Before using mdfmt.nvim, you need:
 
-* **Neovim 0.7 or later.** The newest API the plugin calls is
-  `vim.api.nvim_create_user_command`, which arrived in 0.7. Everything else
-  predates it. Tested on 0.11.
-* **A plugin manager**, such as [lazy.nvim](https://github.com/folke/lazy.nvim).
-  The instructions below use lazy.nvim, but nothing in the plugin depends on it.
+* **Neovim 0.11 or later.** The plugin calls `vim.system()` for the subprocess
+  and `vim.text.diff()` for the minimal-diff apply, falling back to `vim.diff()`
+  where that is all there is.
+* **A Rust toolchain** on `$PATH`, from [rustup](https://rustup.rs/) or your
+  package manager. The crate depends on two libraries and builds in a few
+  seconds. If you would rather not have one, build `md-fmt` elsewhere and point
+  [`bin`](#configure-mdfmtnvim) at it.
+* **A plugin manager**, such as
+  [lazy.nvim](https://github.com/folke/lazy.nvim). The instructions below use
+  lazy.nvim, but nothing in the plugin depends on it.
 
-To develop the template further, you also want
-[StyLua](https://github.com/JohnnyMorganz/StyLua) for formatting and
-[Selene](https://github.com/Kampfkarren/selene) for linting. The repository
-ships a `stylua.toml`, a `selene.toml`, and a `vim.yml` standard library
-definition, all copied from lazydev.nvim.
-
-## Install hello.nvim
+## Install mdfmt.nvim
 
 1. Add the plugin to your lazy.nvim spec:
 
     ```lua
     {
-      "yourname/hello.nvim",
+      "yourname/mdfmt.nvim",
+      build = "cargo build --release --manifest-path rust/Cargo.toml",
       opts = {},
     }
     ```
 
-    Passing `opts` makes lazy.nvim call `require("hello").setup()`. That call
-    registers the `:Hello` command, so the plugin does nothing until it runs.
+    Passing `opts` makes lazy.nvim call `require("mdfmt").setup()`, which
+    registers the `:MdFmt` command. The `build` key is a courtesy: with
+    `auto_build` on, the plugin compiles the binary the first time you format a
+    buffer, and recompiles after an update that changes the Rust source.
 
-2. Restart Neovim and run `:Hello`. If a greeting appears at the cursor, the
-   install worked.
+2. Open a Markdown file and run `:MdFmt status`. It reports the binary's path,
+   whether it exists, whether it looks stale, and its version.
+
+3. Run `:MdFmt`. If the paragraphs rewrap at 80 columns, the install worked.
 
 To try the plugin without installing it, clone the repository and start Neovim
 with the clone on the runtimepath:
 
 ```sh
-nvim --clean -c 'set rtp+=/path/to/hello.nvim' -c 'lua require("hello").setup()'
+make build
+nvim --clean -c 'set rtp+=/path/to/mdfmt.nvim' -c 'lua require("mdfmt").setup()' README.md
 ```
 
-## Configure hello.nvim
+## Configure mdfmt.nvim
 
 Pass a table to `setup()`. Anything you omit keeps its default:
 
 ```lua
-require("hello").setup({
-  -- Name substituted into the greeting
-  name = "World",
-  -- Greeting template. %s is replaced with name.
-  greeting = "Hello, %s!",
-  -- Format string passed to os.date
-  date_format = "%Y-%m-%d",
-  -- Lines inserted by the signature feature
-  signature = {
-    "--",
-    "Sent from hello.nvim",
-  },
+require("mdfmt").setup({
+  -- Filetypes :MdFmt will touch.
+  filetypes = { "markdown", "markdown.mdx", "mdx" },
+  -- Column to wrap prose at. 0 leaves line breaks where you put them.
+  width = 80,
+  -- Frontmatter fence, or false to treat a leading --- as a thematic break.
+  frontmatter = "---",
+  -- Format on :w. Blocks the write while the binary runs.
+  format_on_save = false,
+  -- Path to a prebuilt md-fmt, if you would rather manage it yourself.
+  bin = nil,
+  -- Build the binary when it is missing or older than the crate source.
+  auto_build = true,
+  cargo = "cargo",
+  -- Milliseconds to wait for a synchronous format.
+  timeout = 5000,
   debug = false,
 })
 ```
 
-`date_format` accepts any [`os.date`](https://www.lua.org/manual/5.1/manual.html#pdf-os.date)
-format string, which follows C `strftime`. Use `%H:%M` for a clock time or
-`%A, %d %B %Y` for a long date.
+Two settings deserve a note:
 
-You can read configuration without calling `setup()`. `lua/hello/config.lua`
-uses a `setmetatable` `__index` hook that runs `setup()` on first access, so
-`require("hello.config").name` returns `"World"` in a fresh session. This
-pattern comes from lazydev.nvim, and it keeps initialization checks out of every
-other module.
+* **`width = 0`** turns wrapping off. Everything else still runs, so this is
+  the setting for a repository that keeps one sentence per line.
+* **`bin`** opts out of the build machinery entirely. That binary is yours: the
+  plugin never rebuilds it and never calls it stale.
 
-## Run hello.nvim
-
-Each feature has a subcommand and a Lua function.
+## Run mdfmt.nvim
 
 | Command | Lua | Result |
 | --- | --- | --- |
-| `:Hello` or `:Hello greet` | `require("hello").greet()` | Inserts `Hello, World!` |
-| `:Hello date` | `require("hello").date()` | Inserts today's date, such as `2026-07-21` |
-| `:Hello date %H:%M` | `require("hello").date("%H:%M")` | Inserts the current time, such as `14:32` |
-| `:Hello sign` | `require("hello").sign()` | Inserts the signature lines |
+| `:MdFmt` or `:MdFmt format` | `require("mdfmt").format()` | Formats the current buffer |
+| `:MdFmt build` | `require("mdfmt").build()` | Compiles the binary, stale or not |
+| `:MdFmt status` | `require("mdfmt").status()` | Reports the binary's path, state, and version |
 
-Every subcommand inserts text at the cursor in the current buffer. Press `<Tab>`
-after `:Hello ` to complete the subcommand names.
+Press `<Tab>` after `:MdFmt ` to complete the subcommand names.
 
-To bind a feature to a key:
+`format()` accepts `opts.buf` to target another buffer and `opts.sync` to block
+until the binary returns instead of applying the result from a callback. Format
+on save uses the synchronous path, because a `BufWritePre` callback cannot delay
+the write.
+
+To bind formatting to a key:
 
 ```lua
-vim.keymap.set("n", "<leader>hg", function()
-  require("hello").greet()
-end, { desc = "Insert greeting" })
+vim.keymap.set("n", "<leader>mf", function()
+  require("mdfmt").format()
+end, { desc = "Format Markdown" })
 ```
 
-## How the code is organized
-
-```
-lua/hello/
-  init.lua       Public API. setup() plus one function per feature.
-  config.lua     Defaults, option merging, and the :Hello command.
-  cmd.lua        Subcommand dispatch and tab completion.
-  util.lua       Shared helpers: insert_at_cursor, notify, warn, error, debug.
-  greeting.lua   Feature module.
-  date.lua       Feature module.
-  signature.lua  Feature module.
-doc/hello.nvim.txt   Help file. Plugin managers build doc/tags from it on install,
-                     which is why doc/tags is gitignored rather than committed.
-.luarc.json          Tells lua-language-server about the vim global.
-```
-
-Three conventions carry over from lazydev.nvim, and they are the reason to start
-here rather than from a blank directory:
-
-* **`init.lua` stays thin.** It exposes the public API and nothing else. Every
-  function body is a single `require` call, so loading the plugin loads one small
-  file and touches no feature code.
-* **One user command, many subcommands.** `cmd.lua` maps subcommand names to
-  functions in a table, then completes and dispatches against that table. Adding
-  a feature means adding one table entry, not another `nvim_create_user_command`
-  call cluttering the command namespace.
-* **Feature modules stay independent.** `greeting.lua`, `date.lua`, and
-  `signature.lua` each expose a pure function that returns text and a thin
-  `insert()` wrapper. You test the pure function; the wrapper touches the
-  buffer.
-
-The [`.luarc.json`](https://luals.github.io/wiki/configuration/) file points
-[lua-language-server](https://github.com/LuaLS/lua-language-server) at the
-Neovim runtime, which silences `undefined global vim` warnings in your editor.
-Open the project from its root, or the server never reads the file.
-
-## Turn this template into your own plugin
-
-1. **Rename the module directory.** Move `lua/hello` to `lua/yourplugin`, then
-   replace `hello` in every `require` path.
-
-2. **Rename the command.** Change `"Hello"` in `lua/yourplugin/config.lua` to
-   your command name, and change the matching `parts[1]:find("Hello")` guard in
-   `cmd.lua`. That guard strips the command name when Neovim passes the whole
-   line to the completion function.
-
-3. **Replace the defaults.** Rewrite the `defaults` table in `config.lua`. Keep
-   the `setmetatable` block at the bottom of the file unchanged.
-
-4. **Swap the feature modules.** Delete `greeting.lua`, `date.lua`, and
-   `signature.lua`, and write your own modules in their shape. Register each one
-   in the `M.commands` table in `cmd.lua` and, if it belongs in the public API,
-   in `init.lua`.
-
-5. **Rewrite the help file.** Rename `doc/hello.nvim.txt`, update its tags, and
-   run `:helptags doc` to regenerate the index.
-
-6. **Add a license.** See [Terms of use](#terms-of-use).
-
-Verify the result without leaving your shell:
+The binary also runs on its own, over stdin, if you want it in a shell pipeline
+or another editor:
 
 ```sh
-nvim --headless --clean -c 'set rtp+=.' \
-  -c 'lua require("yourplugin").setup()' \
-  -c 'YourCommand' \
-  -c 'lua print(vim.api.nvim_get_current_line())' -c 'qa!'
+md-fmt --width 100 --mdx < page.mdx
 ```
 
-## Troubleshoot hello.nvim
+## How MDX is handled
+
+comrak does not understand [MDX](https://mdxjs.com/), and teaching it would
+mean forking a CommonMark parser. So markdown-rs does one job: it reports the
+byte spans of the MDX constructs. Those spans become placeholders that comrak
+carries through untouched, comrak formats the Markdown around them, and the
+original bytes go back where they came from.
+
+The consequence worth knowing is that MDX interiors are frozen. Markdown inside
+`<Callout>...</Callout>` keeps whatever you wrote, because the interior of a JSX
+element is the component's business, and reformatting it can change what the
+component receives.
+
+Invalid MDX is an error rather than a best effort. When `:MdFmt` reports a parse
+failure, the buffer is exactly as you left it.
+
+MDX is detected from the `.mdx` file extension before the filetype, because
+Neovim ships no filetype rule for `.mdx` and plenty of people edit it in a
+buffer that calls itself `markdown`.
+
+## What happens to your cursor
+
+The formatted text goes in as a minimal diff: only the lines that actually
+changed are rewritten. Marks, folds, and extmarks elsewhere in the buffer
+survive, and the undo history stays granular instead of collapsing into one
+opaque step.
+
+When the cursor's own line is rewritten, which rewrapping does often, the cursor
+is carried by the word it was sitting on. That word is found again in the
+replacement text and the cursor follows it, keeping its offset within the word.
+When the word is gone, the cursor falls back to the equivalent position in the
+replacement.
+
+If you type while the binary is running, the result is discarded rather than
+applied over your edit.
+
+## Troubleshoot mdfmt.nvim
 
 | Issue | Solution |
 | --- | --- |
-| `:Hello` reports `E492: Not an editor command` | `setup()` never ran, and that call registers the command. Call `require("hello").setup()`, or give lazy.nvim an `opts` table. |
-| `:Hello` reports `Invalid command: <name>` | The subcommand is not in `M.commands` in `lua/hello/cmd.lua`. Press `<Tab>` after `:Hello ` to list valid names. |
-| Your editor flags `Undefined global vim` | lua-language-server cannot see the Neovim runtime. Open the project from its root so the server picks up `.luarc.json`. |
-| `:help hello.nvim` reports `E149: Sorry, no help for hello.nvim` | The help tags are missing. Run `:helptags doc` from the project root. |
-| Text lands in the wrong place | `util.insert_at_cursor` writes at the cursor of the current window. Insert-mode mappings should use `<Cmd>Hello greet<CR>` rather than `:Hello greet<CR>`, which leaves insert mode first. |
+| `:MdFmt` reports `E492: Not an editor command` | `setup()` never ran, and that call registers the command. Call `require("mdfmt").setup()`, or give lazy.nvim an `opts` table. |
+| `cargo is not executable` | The plugin compiles its own formatter. Install [Rust](https://rustup.rs/), or point `bin` at a binary you built elsewhere. |
+| `could not parse MDX` | The buffer is not valid MDX. Note that HTML comments are invalid in MDX outside a code block; use `{/* ... */}`. |
+| Formatting does nothing | Run `:MdFmt status`. If `exists` is false the build failed; run `:MdFmt build` and read the cargo output. |
+| `not a Markdown or MDX buffer` | The buffer's filetype is not in `filetypes` and its name does not end in `.mdx`. Check `:set filetype?`. |
+| Lines are still longer than `width` | Tables, link destinations, and MDX blobs have no break points in them. comrak wraps at spaces only, so anything without one overflows. |
 
 ## Contributing
 
-This is a template rather than a shared library, so the most useful contribution
-is a fork. If you find a bug in the scaffolding itself, open an issue with the
-Neovim version from `:version` and the smallest `--clean` reproduction you can
-manage.
+Open an issue with the output of `:MdFmt status`, your Neovim version from
+`:version`, and the smallest input that reproduces the problem. A formatter bug
+is usually a few lines of Markdown, so paste them.
 
-Before sending a patch, format and lint:
+The [`Makefile`](Makefile) covers the loop:
 
 ```sh
-stylua lua/
-selene lua/
+make build   # cargo build --release
+make test    # Rust unit tests, then the Lua specs against the real binary
+make fmt     # stylua and cargo fmt
+make lint    # selene and cargo clippy
 ```
+
+`make test-lua` builds the binary first, because the Lua specs in
+[`tests/`](tests) drive the real thing rather than a stub. Formatting changes
+belong in [`rust/tests/format.rs`](rust/tests/format.rs) alongside a fixture;
+buffer and cursor changes belong in the Lua specs.
 
 ## Additional documentation
 
-* [`doc/hello.nvim.txt`](doc/hello.nvim.txt) is the in-editor help file; read it
-  with `:help hello.nvim`. Any plugin you publish needs one.
-* [lazydev.nvim](https://github.com/folke/lazydev.nvim) is the plugin this
-  layout draws from. Read its `lua/lazydev/` directory to see the same patterns
-  carrying real features.
-* [`:help write-plugin`](https://neovim.io/doc/user/usr_41.html#write-plugin) and
-  [`:help lua-guide`](https://neovim.io/doc/user/lua-guide.html) are the official
-  references for plugin structure and the Lua API.
-* [nvim-lua/plugin-template](https://github.com/nvim-lua/plugin-template) is an
-  alternative starting point: it adds CI and a test harness but ships no working
-  features.
+* [`doc/mdfmt.txt`](doc/mdfmt.txt) is the in-editor help file. Read it with
+  `:help mdfmt.nvim` once your plugin manager has generated the tags.
+* [comrak](https://github.com/kivikakk/comrak) does the CommonMark formatting.
+  Its options are what `width`, `frontmatter`, and the enabled extensions
+  (tables, strikethrough, task lists, alerts, autolinks, footnotes) map onto.
+* [markdown-rs](https://github.com/wooorm/markdown-rs) supplies the MDX spans.
+  Its README documents which MDX constructs it recognizes.
+* [The MDX specification](https://mdxjs.com/docs/what-is-mdx/) explains the
+  constructs the formatter preserves and the rules that make an input invalid.
+* [`md-fmt --help`](rust/src/cli.rs) lists the binary's flags, which is the
+  fastest way to reason about what the plugin passes it.
 
 ## How to get help
 
-* Open an issue on this repository for problems with the template.
-* Ask about Neovim plugin development in the
-  [Neovim Discourse](https://neovim.discourse.group/) or the
-  [r/neovim](https://reddit.com/r/neovim) community.
-* Read `:help lua` and `:help api` in your editor before searching the web. The
-  bundled documentation is current for the version you are running.
+* Open an issue on this repository for bugs and feature requests.
+* Ask about Neovim plugins in the
+  [Neovim Discourse](https://neovim.discourse.group/) or on
+  [r/neovim](https://reddit.com/r/neovim).
+* Report a wrong formatting decision that has nothing to do with MDX
+  [upstream to comrak](https://github.com/kivikakk/comrak/issues) instead. This
+  plugin sets comrak's options; it does not implement the rendering.
 
 ## Terms of use
 
-This template ships without a license file, because the license should be yours.
-Before publishing, add a `LICENSE` file and name it in this section. If you have
-no preference, [choosealicense.com](https://choosealicense.com/) walks you
-through the common options in a few minutes.
+This project ships no license file yet. Add one before publishing, and name it
+here. [choosealicense.com](https://choosealicense.com/) walks through the common
+options in a few minutes.

@@ -1,0 +1,43 @@
+---
+title: Kitchen sink
+tags: [mdx, comrak]
+---
+
+import Widget from './widget.js'
+
+Setext title
+============
+
+Some text with {props.count} inline, <Chip label="x" /> too,
+and a lazy
+continuation line that keeps going for long enough that a formatter with a wrap width has something to think about.
+
+<Callout kind="info">
+Some **markdown**    frozen inside the blob.
+</Callout>
+
+- [x] done
+- [ ] not ~~yet~~
+    - deeply indented child
+- item with a nested element:
+
+  <Callout kind="warn">
+  Nested inside a list item.
+  Second line of the blob.
+  </Callout>
+
+1) parens numbering
+2) second item
+
+| a | b |
+|---|:--|
+| 1 | 2 |
+
+> [!NOTE]
+> sloppy alert spacing
+
+```js
+const x = 1
+```
+
+export const answer = 42

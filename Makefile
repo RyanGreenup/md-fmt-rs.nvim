@@ -13,6 +13,7 @@ test-rust:
 # The Lua tests drive the real binary, so it has to exist first.
 test-lua: build
 	nvim --headless --clean -c 'set rtp+=.' -l tests/cursor_spec.lua
+	nvim --headless --clean -c 'set rtp+=.' -l tests/table_spec.lua
 	nvim --headless --clean -c 'set rtp+=.' -l tests/format_spec.lua
 
 fmt:

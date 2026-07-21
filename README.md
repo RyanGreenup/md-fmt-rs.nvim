@@ -110,6 +110,8 @@ require("mdfmt").setup({
   frontmatter = "---",
   -- Format on :w. Blocks the write while the binary runs.
   format_on_save = false,
+  -- Keep the table under the cursor aligned while editing. Defaults to on.
+  table_auto_format = true,
   -- Path to a prebuilt md-fmt, if you would rather manage it yourself.
   bin = nil,
   -- Build the binary when it is missing or older than the crate source.
@@ -135,8 +137,27 @@ Two settings deserve a note:
 | `:MdFmt` or `:MdFmt format` | `require("mdfmt").format()` | Formats the current buffer |
 | `:MdFmt build` | `require("mdfmt").build()` | Compiles the binary, stale or not |
 | `:MdFmt status` | `require("mdfmt").status()` | Reports the binary's path, state, and version |
+| `:MdFmt table-toggle` | `require("mdfmt.table").toggle()` | Toggles automatic table formatting globally for this session |
 
 Press `<Tab>` after `:MdFmt ` to complete the subcommand names.
+
+While `table_auto_format` is enabled, the table under the cursor is aligned
+200 ms after typing pauses and immediately after leaving Insert mode. Only that
+table is changed, and only its padding: cell text is copied across untouched.
+Escaped pipes and pipes inside inline code stay cell content, short rows are
+padded out, and alignment markers are preserved.
+
+The table is found by the same comrak parse that `:MdFmt` uses, so a run of
+lines is a table exactly when GitHub would call it one. Two consequences are
+worth knowing while typing:
+
+- A header row and its delimiter row must have the same number of cells. Until
+  they do, the lines are not a table yet and are left alone.
+- A row with more cells than the header declares is left alone too, rather than
+  reformatted: GFM ignores the surplus cell, so realigning the row would delete
+  text that is still on screen. Widen the header and it lines up.
+
+The feature does not create tables or map `<Tab>`.
 
 `format()` accepts `opts.buf` to target another buffer and `opts.sync` to block
 until the binary returns instead of applying the result from a callback. Format

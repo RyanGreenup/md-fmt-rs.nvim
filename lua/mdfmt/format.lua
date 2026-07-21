@@ -27,9 +27,12 @@ function M.supported(buf)
   return vim.tbl_contains(Config.filetypes, vim.bo[buf].filetype) or M.is_mdx(buf)
 end
 
+--- The command that formats this buffer, up to the subcommand. Table
+--- realignment appends its own flags, so that both ways of running the binary
+--- read the buffer with the same settings.
 ---@param buf integer
 ---@return string[]
-local function args(buf)
+function M.args(buf)
   local out = { Bin.path(), "--width", tostring(Config.width) }
   if M.is_mdx(buf) then
     table.insert(out, "--mdx")
@@ -96,14 +99,14 @@ function M.format(opts)
     if not Bin.exists() then
       return Util.error("md-fmt is not built yet; run :MdFmt build")
     end
-    return finish(buf, tick, vim.system(args(buf), { stdin = text, text = true }):wait(Config.timeout))
+    return finish(buf, tick, vim.system(M.args(buf), { stdin = text, text = true }):wait(Config.timeout))
   end
 
   Bin.ensure(function(ok)
     if not ok then
       return
     end
-    vim.system(args(buf), { stdin = text, text = true }, function(result)
+    vim.system(M.args(buf), { stdin = text, text = true }, function(result)
       vim.schedule(function()
         finish(buf, tick, result)
       end)

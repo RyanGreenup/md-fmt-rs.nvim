@@ -59,6 +59,8 @@ Pass a table to `setup()`. Anything omitted keeps its default: >lua
       frontmatter = "---",
       -- Format on :w. Blocks the write while the binary runs.
       format_on_save = false,
+      -- Keep the table under the cursor aligned while editing. Default: true.
+      table_auto_format = true,
       -- Path to a prebuilt md-fmt, if you would rather manage it yourself.
       bin = nil,
       -- Build the binary when it is missing or older than the crate source.
@@ -81,8 +83,22 @@ COMMANDS                                                      *md-fmt-rs.nvim-co
 `:MdFmt` or `:MdFmt format`  Format the current buffer.
 `:MdFmt build`               Compile the binary, whether or not it looks stale.
 `:MdFmt status`              Report the binary's path, state, and version.
+`:MdFmt table-toggle`        Toggle automatic table formatting for this session.
 
 Press <Tab> after `:MdFmt ` to complete the subcommand names.
+
+When `table_auto_format` is enabled, the Markdown table under the cursor is
+aligned 200 ms after Insert-mode typing pauses and on |InsertLeave|. Only the
+active table is changed, and only its padding: cell text is copied across
+untouched. Short rows are padded out, alignment markers are kept, and escaped
+or inline-code pipes remain cell content.
+
+The table is located by the same comrak parse that `:MdFmt` uses, so a run of
+lines is a table exactly when GitHub would call it one. A header row and its
+delimiter row must therefore agree on the number of cells, and a row carrying
+more cells than the header declares is left alone rather than reformatted:
+GFM ignores the surplus cell, so realigning would delete text that is still on
+screen. This feature does not create tables or map <Tab>.
 
 
 API                                                                *md-fmt-rs.nvim-api*

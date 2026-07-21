@@ -13,6 +13,8 @@ local defaults = {
   -- Format on `:w`. Runs the binary synchronously, because an async callback
   -- cannot delay the write.
   format_on_save = false,
+  -- Keep the Markdown table under the cursor aligned while it is being edited.
+  table_auto_format = true,
   -- Path to a prebuilt `md-fmt`. When nil, the one under `rust/target/release`
   -- in this plugin's own directory is used.
   bin = nil, ---@type string?
@@ -44,6 +46,22 @@ function M.setup(opts)
   })
 
   local group = vim.api.nvim_create_augroup("mdfmt", { clear = true })
+  local Table = require("mdfmt.table")
+  Table.configure(options.table_auto_format)
+  vim.api.nvim_create_autocmd("TextChangedI", {
+    group = group,
+    callback = function(event)
+      Table.schedule(event.buf)
+    end,
+    desc = "md-fmt-rs.nvim: align table after typing",
+  })
+  vim.api.nvim_create_autocmd("InsertLeave", {
+    group = group,
+    callback = function(event)
+      Table.schedule(event.buf, true)
+    end,
+    desc = "md-fmt-rs.nvim: align table after leaving insert mode",
+  })
   if options.format_on_save then
     vim.api.nvim_create_autocmd("BufWritePre", {
       group = group,

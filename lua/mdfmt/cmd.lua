@@ -13,6 +13,10 @@ M.commands = {
   status = function()
     Util.notify(require("mdfmt.bin").status())
   end,
+  ["table-toggle"] = function()
+    local enabled = require("mdfmt.table").toggle()
+    Util.notify("automatic table formatting " .. (enabled and "enabled" or "disabled"))
+  end,
 }
 
 function M.execute(input)

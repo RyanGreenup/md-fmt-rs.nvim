@@ -9,4 +9,5 @@ test:
     cd rust && cargo test
     cd rust && cargo build --release
     nvim --headless --clean -c 'set rtp+=.' -l tests/cursor_spec.lua
+    nvim --headless --clean -c 'set rtp+=.' -l tests/table_spec.lua
     nvim --headless --clean -c 'set rtp+=.' -l tests/format_spec.lua

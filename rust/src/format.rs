@@ -110,7 +110,10 @@ fn closes_fence(line: &str, (marker, length): (char, usize)) -> bool {
         && rest.trim_end().chars().all(|c| c == marker)
 }
 
-fn options(settings: &Settings) -> Options<'static> {
+/// The parser and renderer configuration a document is read with. Table
+/// realignment reads the buffer with exactly these, so that both halves of the
+/// crate agree on what is and is not a table.
+pub(crate) fn options(settings: &Settings) -> Options<'static> {
     let mut options = Options::default();
 
     options.extension.table = true;

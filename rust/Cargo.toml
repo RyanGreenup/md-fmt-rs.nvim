@@ -6,9 +6,12 @@ description = "Formatting engine for md-fmt-rs.nvim: comrak for Markdown, markdo
 publish = false
 
 # The plugin compiles this on the user's machine the first time they format a
-# buffer, and they watch it happen. Keep the dependency list at two crates:
-# comrak's default features pull in syntect, clap, and an emoji table, none of
-# which a formatter needs.
+# buffer, and they watch it happen. Keep the dependency list short: comrak's
+# default features pull in syntect, clap, and an emoji table, none of which a
+# formatter needs. unicode-width earns its place by having no dependencies of
+# its own and being the only way to pad a table column by what the cell takes
+# up on screen rather than by how many bytes it happens to be.
 [dependencies]
 comrak = { version = "0.54.0", default-features = false }
 markdown = "1.0.0"
+unicode-width = "0.2.2"

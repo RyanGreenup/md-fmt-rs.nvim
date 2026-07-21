@@ -8,6 +8,7 @@ use md_fmt::format::{Settings, format};
 
 const KITCHEN_SINK: &str = include_str!("fixtures/kitchen-sink.mdx");
 const PLAIN: &str = include_str!("fixtures/plain.md");
+const MATH_AND_LINK: &str = include_str!("fixtures/math-and-link.mdx");
 
 fn mdx() -> Settings {
     Settings {
@@ -22,11 +23,34 @@ fn run(input: &str, settings: &Settings) -> String {
 
 #[test]
 fn formatting_is_idempotent() {
-    for (input, settings) in [(KITCHEN_SINK, mdx()), (PLAIN, Settings::default())] {
+    for (input, settings) in [
+        (KITCHEN_SINK, mdx()),
+        (PLAIN, Settings::default()),
+        (MATH_AND_LINK, mdx()),
+    ] {
         let once = run(input, &settings);
         let twice = run(&once, &settings);
         assert_eq!(once, twice, "second pass changed the document");
     }
+}
+
+#[test]
+fn math_and_bare_urls_survive_mdx_round_trip() {
+    // Display math must not be reflowed as prose (it would mangle the
+    // backslashes and lose the line breaks), and a bare autolinked URL must
+    // not come back out as `<url>`, since mdxjs-rs parses that as the start
+    // of a JSX tag rather than an autolink.
+    let out = run(MATH_AND_LINK, &mdx());
+
+    assert!(out.contains("$E = mc^2$"), "mangled inline math:\n{out}");
+    assert!(
+        out.contains("$$\n\\int_0^1 x^2\\,dx\n$$"),
+        "mangled display math:\n{out}"
+    );
+    assert!(
+        out.contains("Visit https://example.com/docs and read"),
+        "bare URL was rewritten to an MDX-breaking autolink:\n{out}"
+    );
 }
 
 #[test]

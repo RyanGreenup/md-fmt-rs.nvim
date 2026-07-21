@@ -117,8 +117,12 @@ fn options(settings: &Settings) -> Options<'static> {
     options.extension.strikethrough = true;
     options.extension.tasklist = true;
     options.extension.alerts = true;
-    options.extension.autolink = true;
+    // GFM autolinks render bare URLs back out as `<url>`, which mdxjs-rs
+    // parses as the start of a JSX tag rather than an autolink. Emitting
+    // that form would make our own output fail to re-parse as MDX.
+    options.extension.autolink = !settings.mdx;
     options.extension.footnotes = true;
+    options.extension.math_dollars = true;
     options.extension.front_matter_delimiter = settings.frontmatter.clone();
 
     options.render.width = settings.width;

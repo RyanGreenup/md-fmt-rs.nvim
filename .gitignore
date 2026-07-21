@@ -9,3 +9,6 @@ node_modules
 tt.*
 /.agents
 /.codegraph
+rust/target
+.codemap
+.serena

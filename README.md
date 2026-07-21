@@ -22,8 +22,9 @@ A Markdown and MDX formatter for Neovim, backed by
 ## What this project does
 
 With md-fmt-rs.nvim you can reflow a Markdown or MDX buffer to a fixed width,
-normalize its lists, tables, and code fences, and leave its JSX untouched. Run
-`:MdFmt`, or set `format_on_save` and forget the command exists.
+normalize its lists and code fences, align its tables into readable columns,
+and leave its JSX untouched. Run `:MdFmt`, or set `format_on_save` and forget
+the command exists.
 
 Two things separate it from wiring Prettier or `mdformat` into a general
 formatter plugin:
@@ -141,15 +142,18 @@ Two settings deserve a note:
 
 Press `<Tab>` after `:MdFmt ` to complete the subcommand names.
 
-While `table_auto_format` is enabled, the table under the cursor is aligned
-200 ms after typing pauses and immediately after leaving Insert mode. Only that
-table is changed, and only its padding: cell text is copied across untouched.
-Escaped pipes and pipes inside inline code stay cell content, short rows are
-padded out, and alignment markers are preserved.
+`:MdFmt` aligns every table in the buffer as part of formatting it: each column
+is padded to its widest cell, so the pipes line up in the editor. Escaped pipes
+and pipes inside inline code stay cell content, short rows are padded out, and
+alignment markers are preserved.
 
-The table is found by the same comrak parse that `:MdFmt` uses, so a run of
-lines is a table exactly when GitHub would call it one. Two consequences are
-worth knowing while typing:
+While `table_auto_format` is enabled, you do not have to wait for a format to
+see that. The table under the cursor is aligned on its own 200 ms after typing
+pauses and immediately after leaving Insert mode. Only that table is changed,
+and only its padding: cell text is copied across untouched.
+
+Both use the same comrak parse, so a run of lines is a table exactly when
+GitHub would call it one. Two consequences are worth knowing while typing:
 
 - A header row and its delimiter row must have the same number of cells. Until
   they do, the lines are not a table yet and are left alone.

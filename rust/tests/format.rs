@@ -80,6 +80,28 @@ fn mdx_blob_in_a_list_item_keeps_its_indentation() {
 }
 
 #[test]
+fn tables_come_out_with_their_columns_aligned() {
+    // comrak renders a table with a single space around each cell, which is
+    // valid Markdown that nobody wants to read in an editor.
+    let out = run("|a|bb|\n|:-|-:|\n|xxx|y|\n", &Settings::default());
+
+    assert_eq!(out, "| a   | bb  |\n| :-- | --: |\n| xxx | y   |\n");
+}
+
+#[test]
+fn an_indented_table_is_aligned_where_it_sits() {
+    let out = run(
+        "- item:\n\n  |a|bb|\n  |-|-|\n  |xxx|y|\n",
+        &Settings::default(),
+    );
+
+    assert!(
+        out.contains("  | a   | bb  |\n  | --- | --- |\n  | xxx | y   |"),
+        "table under a list item lost its alignment or its indent:\n{out}"
+    );
+}
+
+#[test]
 fn setext_headings_become_atx() {
     assert!(run(PLAIN, &Settings::default()).contains("# Heading\n"));
 }

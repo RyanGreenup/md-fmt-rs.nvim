@@ -87,14 +87,17 @@ COMMANDS                                                      *md-fmt-rs.nvim-co
 
 Press <Tab> after `:MdFmt ` to complete the subcommand names.
 
-When `table_auto_format` is enabled, the Markdown table under the cursor is
-aligned 200 ms after Insert-mode typing pauses and on |InsertLeave|. Only the
-active table is changed, and only its padding: cell text is copied across
-untouched. Short rows are padded out, alignment markers are kept, and escaped
-or inline-code pipes remain cell content.
+`:MdFmt` aligns every table in the buffer, padding each column out to its
+widest cell so the pipes line up. Short rows are padded out, alignment markers
+are kept, and escaped or inline-code pipes remain cell content.
 
-The table is located by the same comrak parse that `:MdFmt` uses, so a run of
-lines is a table exactly when GitHub would call it one. A header row and its
+When `table_auto_format` is enabled, the table under the cursor is aligned on
+its own 200 ms after Insert-mode typing pauses and on |InsertLeave|, without
+waiting for a format. Only the active table is changed, and only its padding:
+cell text is copied across untouched.
+
+Both use the same comrak parse, so a run of lines is a table exactly when
+GitHub would call it one. A header row and its
 delimiter row must therefore agree on the number of cells, and a row carrying
 more cells than the header declares is left alone rather than reformatted:
 GFM ignores the surplus cell, so realigning would delete text that is still on

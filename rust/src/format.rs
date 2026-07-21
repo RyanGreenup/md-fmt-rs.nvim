@@ -53,7 +53,19 @@ pub fn commonmark(input: &str, settings: &Settings) -> Result<String, String> {
     let mut out = String::with_capacity(input.len());
     format_commonmark(root, &options, &mut out)
         .map_err(|err| format!("comrak failed to render: {err}"))?;
-    Ok(blank_lines(&out))
+
+    // comrak renders a table with one space around each cell, which is valid
+    // and unreadable. Padding the columns is a second pass over comrak's own
+    // output rather than part of the render, since comrak does not offer the
+    // hook, and it is the same pass the editor runs while a table is typed.
+    //
+    // On the MDX path this runs while the blobs are still masked, which is
+    // what keeps a `{a || b}` in a cell from being read as two more cells.
+    // The cost is that such a cell is padded by the width of its placeholder
+    // rather than the width of the blob, so its column comes out a few spaces
+    // wide or narrow. Mangling the expression to fix the spacing would be a
+    // poor trade.
+    Ok(crate::table::align(&blank_lines(&out), settings))
 }
 
 /// Empty the whitespace-only lines comrak leaves behind when it indents a
